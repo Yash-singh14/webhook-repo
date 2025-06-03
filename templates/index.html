@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitHub Activity Log</title>
+</head>
+<body>
+  <h2>GitHub Events</h2>
+  <div id="output"></div>
+
+  <script>
+    function loadData() {
+      fetch("/get-events")
+        .then(response => response.json())
+        .then(data => {
+          const output = document.getElementById("output");
+          output.innerHTML = "";
+
+          data.forEach(event => {
+            const time = new Date(event.timestamp).toUTCString();
+            let message = "";
+
+            if (event.type === "push") {
+              message = `${event.author} pushed to ${event.to_branch} on ${time}`;
+            } else if (event.type === "pull_request" && event.merged === false) {
+              message = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${time}`;
+            } else if (event.type === "pull_request" && event.merged === true) {
+              message = `${event.author} merged branch ${event.from_branch} to ${event.to_branch} on ${time}`;
+            }
+
+            output.innerHTML += `<p>${message}</p>`;
+          });
+        })
+        .catch(err => {
+          document.getElementById("output").innerHTML = "Error fetching events.";
+          console.error(err);
+        });
+    }
+
+    loadData();
+    setInterval(loadData, 15000);  // refresh every 15 seconds
+  </script>
+</body>
+</html>
